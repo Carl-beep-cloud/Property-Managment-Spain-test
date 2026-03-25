@@ -1,68 +1,100 @@
 document.addEventListener('DOMContentLoaded', () => {
+
+    // 1. FAQ Accordion Interaction
+    const accordionHeaders = document.querySelectorAll('.accordion-header');
     
-    // 1. Mobile Menu Toggle
-    const mobileMenuBtn = document.querySelector('.mobile-menu-btn');
-    const desktopNav = document.querySelector('.desktop-nav');
+    accordionHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const isExpanded = header.getAttribute('aria-expanded') === 'true';
+            
+            // Close all other accordions
+            accordionHeaders.forEach(h => {
+                h.setAttribute('aria-expanded', 'false');
+                h.nextElementSibling.style.maxHeight = null;
+            });
+
+            // Toggle current
+            if (!isExpanded) {
+                header.setAttribute('aria-expanded', 'true');
+                const content = header.nextElementSibling;
+                content.style.maxHeight = content.scrollHeight + "px";
+            }
+        });
+    });
+
+    // 2. Client-side Form Validation
+    const form = document.getElementById('lead-form');
     
-    if(mobileMenuBtn) {
-        mobileMenuBtn.addEventListener('click', () => {
-            desktopNav.classList.toggle('active');
-            // Toggle icon between bars and times (close)
-            const icon = mobileMenuBtn.querySelector('i');
-            if(desktopNav.classList.contains('active')) {
-                icon.classList.remove('fa-bars');
-                icon.classList.add('fa-xmark');
-            } else {
-                icon.classList.remove('fa-xmark');
-                icon.classList.add('fa-bars');
+    if (form) {
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            let isValid = true;
+            const fields = ['name', 'email', 'phone', 'message'];
+            
+            fields.forEach(fieldId => {
+                const input = document.getElementById(fieldId);
+                const group = input.parentElement;
+                
+                // Simple validation check
+                if (!input.value.trim() || (input.type === 'email' && !input.value.includes('@'))) {
+                    group.classList.add('invalid');
+                    isValid = false;
+                } else {
+                    group.classList.remove('invalid');
+                }
+                
+                // Remove error on input change
+                input.addEventListener('input', () => {
+                    group.classList.remove('invalid');
+                }, { once: true });
+            });
+            
+            if (isValid) {
+                // Trigger success state
+                form.querySelector('.form-submit').disabled = true;
+                form.querySelector('.form-submit').textContent = 'Sending...';
+                
+                // Simulate network request
+                setTimeout(() => {
+                    form.reset();
+                    form.querySelector('.form-submit').disabled = false;
+                    form.querySelector('.form-submit').textContent = 'Send Message';
+                    document.getElementById('form-success').classList.remove('hidden');
+                    
+                    // Hide success message after 5 seconds
+                    setTimeout(() => {
+                        document.getElementById('form-success').classList.add('hidden');
+                    }, 5000);
+                }, 1000);
             }
         });
     }
 
-    // Close mobile menu when a link is clicked
-    const navLinks = document.querySelectorAll('.desktop-nav a');
-    navLinks.forEach(link => {
-        link.addEventListener('click', () => {
-            if(window.innerWidth <= 768) {
-                desktopNav.classList.remove('active');
-                const icon = mobileMenuBtn.querySelector('i');
-                icon.classList.remove('fa-xmark');
-                icon.classList.add('fa-bars');
-            }
-        });
-    });
-
-    // 2. FAQ Accordion Logic
-    const faqQuestions = document.querySelectorAll('.faq-question');
+    // 3. Analytics Tracking Placeholders
+    const trackedElements = document.querySelectorAll('[data-track]');
     
-    faqQuestions.forEach(question => {
-        question.addEventListener('click', () => {
-            const answer = question.nextElementSibling;
-            const isActive = question.classList.contains('active');
-            
-            // Close all other FAQs first (Optional: for accordion style)
-            document.querySelectorAll('.faq-question').forEach(q => {
-                q.classList.remove('active');
-                q.nextElementSibling.style.maxHeight = null;
-            });
-
-            // Toggle current FAQ
-            if (!isActive) {
-                question.classList.add('active');
-                answer.style.maxHeight = answer.scrollHeight + "px";
-            }
+    trackedElements.forEach(el => {
+        el.addEventListener('click', (e) => {
+            const trackName = el.getAttribute('data-track');
+            // e.g. send to GA/GTM or custom analytics:
+            console.log(`[Analytics Event] Interaction detected: ${trackName}`);
         });
     });
 
-    // 3. Header Scroll Effect
-    const header = document.querySelector('.header');
+    // 4. Scroll Depth Tracking Placeholder
+    let reportedDepths = new Set();
     window.addEventListener('scroll', () => {
-        if (window.scrollY > 50) {
-            header.style.padding = '0.5rem 0';
-            header.style.boxShadow = '0 4px 6px rgba(0,0,0,0.1)';
-        } else {
-            header.style.padding = '1rem 0';
-            header.style.boxShadow = '0 2px 4px rgba(0,0,0,0.05)';
-        }
+        const scrollPosition = window.scrollY;
+        const documentHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+        const scrollPercentage = Math.round((scrollPosition / documentHeight) * 100);
+        
+        const marks = [25, 50, 75, 100];
+        marks.forEach(mark => {
+            if (scrollPercentage >= mark && !reportedDepths.has(mark)) {
+                reportedDepths.add(mark);
+                console.log(`[Analytics Event] Scroll depth reached: ${mark}%`);
+            }
+        });
     });
 });
